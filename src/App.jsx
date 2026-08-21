@@ -446,5 +446,154 @@ export default function Cuisine773() {
         <Plus size={24} color="white" />
       </button>
 
-      {zipCheckDone && showZipGate && (
+      {zipCheckDone && showZipGate && (        <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ background: 'rgba(20,24,30,0.55)' }}>
+          <div className="w-full max-w-sm rounded-2xl p-6" style={{ background: COLORS.cardBg }}>
+            <div className="flex justify-center gap-1.5 mb-3">
+              {[0, 1, 2, 3].map((i) => <Star key={i} size={14} fill={COLORS.flagRed} color={COLORS.flagRed} />)}
+            </div>
+            <h2 className="sp-display text-xl font-bold text-center mb-1">What's your ZIP code?</h2>
+            <p className="text-xs text-center mb-4" style={{ color: COLORS.slate }}>
+              We'll show you Chicago-style spots near you. Just once — we remember it.
+            </p>
+            <input
+              value={zipInput}
+              onChange={(e) => setZipInput(e.target.value.replace(/\D/g, '').slice(0, 5))}
+              placeholder="e.g. 60614"
+              inputMode="numeric"
+              autoFocus
+              className="w-full text-center text-2xl sp-mono font-semibold rounded-xl px-3 py-3 mb-3 outline-none tracking-widest"
+              style={{ border: `1px solid ${COLORS.border}` }}
+            />
+            <button
+              onClick={submitZip}
+              disabled={!zipValid || zipStatus === 'loading'}
+              className="w-full text-sm font-semibold rounded-lg py-3 mb-1 flex items-center justify-center gap-2"
+              style={{ background: zipValid ? COLORS.flagBlue : COLORS.border, color: zipValid ? 'white' : COLORS.slateLight }}
+            >
+              {zipStatus === 'loading' && <Loader2 size={16} className="animate-spin" />}
+              {zipStatus === 'loading' ? 'Looking up your ZIP…' : 'Show me the food'}
+            </button>
+            {zipError && <p className="text-xs text-center mb-2" style={{ color: COLORS.flagRed }}>{zipError}</p>}
+            <button onClick={skipZipGate} className="w-full text-xs py-2 mt-1" style={{ color: COLORS.slateLight }}>
+              Skip — just show me everything
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showAdminGate && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ background: 'rgba(20,24,30,0.55)' }}
+          onClick={() => { setShowAdminGate(false); setAdminEmailInput(''); setAdminError(''); }}
+        >
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-2xl p-6" style={{ background: COLORS.cardBg }}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="sp-display text-lg font-semibold">Admin sign-in</h2>
+              <button onClick={() => { setShowAdminGate(false); setAdminEmailInput(''); setAdminError(''); }}>
+                <X size={20} color={COLORS.slate} />
+              </button>
+            </div>
+            <p className="text-xs mb-3" style={{ color: COLORS.slate }}>Admins can remove spots from 773cuisine.</p>
+            <input
+              value={adminEmailInput}
+              onChange={(e) => setAdminEmailInput(e.target.value)}
+              placeholder="you@email.com"
+              className="w-full text-sm rounded-lg px-3 py-2.5 mb-2 outline-none"
+              style={{ border: `1px solid ${COLORS.border}` }}
+            />
+            {adminError && <p className="text-xs mb-2" style={{ color: COLORS.flagRed }}>{adminError}</p>}
+            <button onClick={submitAdminEmail} className="w-full text-sm font-semibold rounded-lg py-3" style={{ background: COLORS.flagBlue, color: 'white' }}>
+              Sign in
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showAdd && (
+        <div
+          className="fixed inset-0 flex items-end sm:items-center justify-center z-50"
+          style={{ background: 'rgba(20,24,30,0.5)' }}
+          onClick={() => { setShowAdd(false); resetForm(); }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-t-2xl sm:rounded-2xl p-5 max-h-[85vh] overflow-y-auto"
+            style={{ background: COLORS.cardBg }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="sp-display text-lg font-semibold">Add a spot</h2>
+              <button onClick={() => { setShowAdd(false); resetForm(); }}><X size={20} color={COLORS.slate} /></button>
+            </div>
+
+            <label className="text-xs font-medium block mb-1" style={{ color: COLORS.slate }}>Name</label>
+            <input
+              value={formName} onChange={(e) => setFormName(e.target.value)}
+              placeholder="e.g. Lou's Deep Dish"
+              className="w-full text-sm rounded-lg px-3 py-2.5 mb-3 outline-none"
+              style={{ border: `1px solid ${COLORS.border}` }}
+            />
+
+            <label className="text-xs font-medium block mb-1" style={{ color: COLORS.slate }}>Category</label>
+            <select
+              value={formCategory} onChange={(e) => setFormCategory(e.target.value)}
+              className="w-full text-sm rounded-lg px-3 py-2.5 mb-3 outline-none"
+              style={{ border: `1px solid ${COLORS.border}`, background: 'white' }}
+            >
+              {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+            </select>
+
+            <label className="text-xs font-medium block mb-1" style={{ color: COLORS.slate }}>Description</label>
+            <textarea
+              value={formDesc} onChange={(e) => setFormDesc(e.target.value)}
+              placeholder="What makes it worth the trip?"
+              rows={3}
+              className="w-full text-sm rounded-lg px-3 py-2.5 mb-3 outline-none resize-none"
+              style={{ border: `1px solid ${COLORS.border}` }}
+            />
+
+            <label className="text-xs font-medium block mb-1" style={{ color: COLORS.slate }}>Your name (optional)</label>
+            <input
+              value={formSubmitter} onChange={(e) => setFormSubmitter(e.target.value)}
+              placeholder="Anonymous"
+              className="w-full text-sm rounded-lg px-3 py-2.5 mb-3 outline-none"
+              style={{ border: `1px solid ${COLORS.border}` }}
+            />
+
+            <label className="text-xs font-medium block mb-1" style={{ color: COLORS.slate }}>Location</label>
+            <button
+              onClick={captureFormLocation}
+              className="w-full text-sm rounded-lg px-3 py-2.5 mb-1 flex items-center justify-center gap-2"
+              style={{ border: `1px solid ${COLORS.border}`, color: formLocStatus === 'done' ? '#1F8A4C' : COLORS.ink }}
+            >
+              {formLocStatus === 'fetching' && <Loader2 size={14} className="animate-spin" />}
+              <MapPin size={14} />
+              {formLocStatus === 'done' ? 'Location captured ✓' : 'Use my current location'}
+            </button>
+            {formLocStatus === 'error' && (
+              <p className="text-[11px] mb-2" style={{ color: COLORS.flagRed }}>Couldn't get your location — check permissions and try again.</p>
+            )}
+            <p className="text-[11px] mb-3" style={{ color: COLORS.slateLight }}>Stand at the spot (or near it) before capturing.</p>
+
+            {saveError && <p className="text-xs mb-2" style={{ color: COLORS.flagRed }}>{saveError}</p>}
+
+            <button
+              onClick={submitVendor}
+              disabled={!formName.trim() || !formLoc || submitting}
+              className="w-full text-sm font-semibold rounded-lg py-3 flex items-center justify-center gap-2"
+              style={{
+                background: (!formName.trim() || !formLoc) ? COLORS.border : COLORS.flagBlue,
+                color: (!formName.trim() || !formLoc) ? COLORS.slateLight : 'white',
+              }}
+            >
+              {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
+              Add spot
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
