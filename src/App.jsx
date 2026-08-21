@@ -148,3 +148,153 @@ export default function Cuisine773() {
         setShowZipGate(true);
       }
     } catch (e) {
+      setShowZipGate(true);
+    } finally {
+      setZipCheckDone(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(ADMIN_STORAGE_KEY) === 'true') setIsAdmin(true);
+    } catch (e) { /* not signed in as admin yet */ }
+  }, []);
+
+  const submitZip = async () => {
+    const zip = zipInput.trim();
+    if (!/^\d{5}$/.test(zip)) return;
+    setZipStatus('loading');
+    setZipError('');
+    try {
+      const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+      if (!res.ok) throw new Error('not found');
+      const data = await res.json();
+      const place = data.places && data.places[0];
+      if (!place) throw new Error('no place');
+      const loc = {
+        zip,
+        lat: parseFloat(place.latitude),
+        lng: parseFloat(place.longitude),
+        label: `${place['place name']}, ${place['state abbreviation']}`,
+      };
+      try { localStorage.setItem(ZIP_STORAGE_KEY, JSON.stringify(loc)); } catch (e) {}
+      setZipCode(loc.zip);
+      setZipLat(loc.lat);
+      setZipLng(loc.lng);
+      setZipLabel(loc.label);
+      setZipStatus('idle');
+      setShowZipGate(false);
+    } catch (e) {
+      setZipStatus('error');
+      setZipError("Couldn't find that ZIP — double check it and try again.");
+    }
+  };
+
+  const skipZipGate = () => {
+    const loc = { zip: '', lat: null, lng: null, label: '' };
+    try { localStorage.setItem(ZIP_STORAGE_KEY, JSON.stringify(loc)); } catch (e) {}
+    setZipCode(''); setZipLat(null); setZipLng(null); setZipLabel('');
+    setZipStatus('idle');
+    setShowZipGate(false);
+  };
+
+  const openZipGate = () => {
+    setZipInput(zipCode || '');
+    setZipError('');
+    setZipStatus('idle');
+    setShowZipGate(true);
+  };
+
+  const submitAdminEmail = () => {
+    if (ADMIN_EMAILS.includes(adminEmailInput.trim().toLowerCase())) {
+      setIsAdmin(true);
+      try { localStorage.setItem(ADMIN_STORAGE_KEY, 'true'); } catch (e) {}
+      setShowAdminGate(false);
+      setAdminEmailInput('');
+      setAdminError('');
+    } else {
+      setAdminError("That email isn't an admin on 773cuisine.");
+    }
+  };
+
+  const signOutAdmin = () => {
+    if (!window.confirm('Sign out of admin?')) return;
+    setIsAdmin(false);
+    try { localStorage.setItem(ADMIN_STORAGE_KEY, 'false'); } catch (e) {}
+  };
+
+  const deleteVendor = async (id) => {
+    if (!isAdmin) return;
+    if (!window.confirm('Remove this spot from 773cuisine?')) return;
+    try {
+      const { error } = await supabase.from('vendors').delete().eq('id', id);
+      if (error) throw error;
+      setVendors((prev) => prev.filter((v) => v.id !== id));
+    } catch (e) {
+      window.alert("Couldn't delete — try again.");
+    }
+  };
+
+  const captureFormLocation = () => {
+    if (!navigator.geolocation) { setFormLocStatus('error'); return; }
+    setFormLocStatus('fetching');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setFormLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setFormLocStatus('done'); },
+      () => setFormLocStatus('error'),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const resetForm = () => {
+    setFormName(''); setFormCategory(CATEGORIES[0].id); setFormDesc('');
+    setFormSubmitter(''); setFormLoc(null); setFormLocStatus('idle'); setSaveError('');
+  };
+
+  const submitVendor = async () => {
+    if (!formName.trim() || !formLoc) return;
+    setSubmitting(true);
+    setSaveError('');
+    const newVendor = {
+      id: `v-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: formName.trim(),
+      category: formCategory,
+      description: formDesc.trim(),
+      lat: formLoc.lat,
+      lng: formLoc.lng,
+      addedBy: formSubmitter.trim() || 'Anonymous',
+      addedAt: new Date().toISOString(),
+    };
+    try {
+      const { error } = await supabase.from('vendors').insert([vendorToRow(newVendor)]);
+      if (error) throw error;
+      setVendors((prev) => [...prev, newVendor]);
+      setShowAdd(false);
+      resetForm();
+    } catch (e) {
+      setSaveError("Couldn't save that spot — check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const regionCenter = (zipLat != null && zipLng != null) ? { lat: zipLat, lng: zipLng, label: zipLabel } : null;
+
+  const withDistance = vendors.map((v) => ({
+    ...v,
+    distance: regionCenter ? milesBetween(regionCenter.lat, regionCenter.lng, v.lat, v.lng) : null,
+  }));
+
+  const filtered = withDistance
+    .filter((v) => activeCategory === 'all' || v.category === activeCategory)
+    .filter((v) => v.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      if (a.distance != null && b.distance != null) return a.distance - b.distance;
+      return a.name.localeCompare(b.name);
+    });
+
+  const zipValid = /^\d{5}$/.test(zipInput);
+
+  return (
+    <div style={{ background: COLORS.bg, minHeight: '100vh', fontFamily: "'Inter', sans-serif", color: COLORS.ink }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap');
