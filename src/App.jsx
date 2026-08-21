@@ -297,4 +297,154 @@ export default function Cuisine773() {
   return (
     <div style={{ background: COLORS.bg, minHeight: '100vh', fontFamily: "'Inter', sans-serif", color: COLORS.ink }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap');        .sp-display { font-family: 'Oswald', sans-serif; letter-spacing: 0.02em; }
+        .sp-mono { font-family: 'JetBrains Mono', monospace; }
+        ::selection { background: ${COLORS.flagRed}; color: white; }
+      `}</style>
+
+      <div>
+        <div style={{ height: 10, background: COLORS.flagBlue }} />
+        <div style={{ height: 22, background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <Star key={i} size={11} fill={COLORS.flagRed} color={COLORS.flagRed} />
+          ))}
+        </div>
+        <div style={{ height: 10, background: COLORS.flagBlue }} />
+      </div>
+
+      <div className="max-w-md mx-auto px-4 pb-28">
+        <div className="pt-6 pb-4">
+          <h1 className="sp-display text-3xl font-bold" style={{ color: COLORS.ink }}>773cuisine</h1>
+          <p className="text-sm mt-1" style={{ color: COLORS.slate }}>Chicago-style eats, found near you.</p>
+          <p className="text-xs mt-2" style={{ color: COLORS.slateLight }}>
+            773 is Chicago's code. Enter your ZIP and we'll show you the Chicago food near you.
+          </p>
+        </div>
+
+        {zipCheckDone && !showZipGate && (
+          <button
+            onClick={openZipGate}
+            className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full w-full mb-3"
+            style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.border}`, color: COLORS.ink }}
+          >
+            <MapPin size={12} color={COLORS.flagBlue} style={{ flexShrink: 0 }} />
+            <span className="truncate">
+              {zipCode ? `${zipCode} · ${zipLabel}` : 'Showing everything'}
+            </span>
+            <span style={{ color: COLORS.slateLight, flexShrink: 0 }}>· Change</span>
+          </button>
+        )}
+
+        <div className="relative mb-3">
+          <Search size={16} style={{ position: 'absolute', left: 12, top: 12, color: COLORS.slateLight }} />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name…"
+            className="w-full text-sm rounded-xl pl-9 pr-3 py-2.5 outline-none"
+            style={{ border: `1px solid ${COLORS.border}`, background: COLORS.cardBg }}
+          />
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-3 mb-1 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
+          <button
+            onClick={() => setActiveCategory('all')}
+            className="text-xs font-medium px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+            style={activeCategory === 'all' ? { background: COLORS.ink, color: 'white' } : { background: COLORS.cardBg, color: COLORS.slate, border: `1px solid ${COLORS.border}` }}
+          >
+            All spots
+          </button>
+          {CATEGORIES.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setActiveCategory(c.id)}
+              className="text-xs font-medium px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+              style={activeCategory === c.id ? { background: c.color, color: 'white' } : { background: COLORS.cardBg, color: COLORS.slate, border: `1px solid ${COLORS.border}` }}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-3 flex flex-col gap-3">
+          {loadingVendors && (
+            <div className="text-sm py-10 text-center" style={{ color: COLORS.slateLight }}>Loading spots…</div>
+          )}
+          {!loadingVendors && filtered.length === 0 && (
+            <div className="text-center py-10 px-4 rounded-xl" style={{ background: COLORS.cardBg, border: `1px dashed ${COLORS.border}` }}>
+              <p className="text-sm font-medium">No spots match yet.</p>
+              <p className="text-xs mt-1" style={{ color: COLORS.slateLight }}>Be the first to add one nearby.</p>
+            </div>
+          )}
+          {filtered.map((v) => {
+            const cat = categoryById(v.category);
+            const Icon = cat.Icon;
+            return (
+              <div key={v.id} className="rounded-xl p-4" style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.border}` }}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 36, height: 36, background: cat.color }}>
+                      <Icon size={17} color="white" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold leading-snug">{v.name}</h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[11px] font-medium" style={{ color: cat.color }}>{cat.label}</span>
+                        {v.distance != null && (
+                          <span className="sp-mono text-[11px]" style={{ color: COLORS.slateLight }}>· {formatDistance(v.distance)}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {isAdmin && (
+                    <button
+                      onClick={() => deleteVendor(v.id)}
+                      className="p-1.5 rounded-md flex-shrink-0"
+                      style={{ background: '#FDF1F1' }}
+                      aria-label="Delete spot"
+                    >
+                      <Trash2 size={14} color={COLORS.flagRed} />
+                    </button>
+                  )}
+                </div>
+                {v.description && (
+                  <p className="text-xs mt-2 leading-relaxed" style={{ color: COLORS.slate }}>{v.description}</p>
+                )}
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-[10px]" style={{ color: COLORS.slateLight }}>Added by {v.addedBy}</span>
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-xs font-medium"
+                    style={{ color: COLORS.flagBlue }}
+                  >
+                    <Navigation size={12} /> Directions
+                  </a>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="text-center mt-8 pt-4" style={{ borderTop: `1px solid ${COLORS.border}` }}>
+          <button
+            onClick={() => (isAdmin ? signOutAdmin() : setShowAdminGate(true))}
+            className="text-[11px]"
+            style={isAdmin ? { color: COLORS.flagRed, fontWeight: 600 } : { color: COLORS.slateLight }}
+          >
+            {isAdmin ? 'Admin ✓ · Sign out' : 'Admin'}
+          </button>
+        </div>
+      </div>
+
+      <button
+        onClick={() => setShowAdd(true)}
+        className="fixed rounded-full flex items-center justify-center shadow-lg"
+        style={{ bottom: 24, right: 24, width: 56, height: 56, background: COLORS.flagRed }}
+        aria-label="Add a spot"
+      >
+        <Plus size={24} color="white" />
+      </button>
+
+      {zipCheckDone && showZipGate && (
+
