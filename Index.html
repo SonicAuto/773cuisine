@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>773 Cuisine — Chicago Style, Tracked Down Anywhere</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #17233d;
+    --flag-blue: #4fa8d8;
+    --flag-blue-dark: #2f7fab;
+    --star-red: #c8102e;
+    --crust: #f4ecd8;
+    --crust-card: #fffaf0;
+    --char: #2b2321;
+    --steel: #6b7688;
+    --line: #e4d8bd;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--crust);
+    color: var(--char);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  #root { min-height: 100vh; }
+  a { color: var(--flag-blue-dark); }
+  button, input, select { font-family: inherit; }
+  :focus-visible {
+    outline: 3px solid var(--star-red);
+    outline-offset: 2px;
+  }
+
+  .page { max-width: 640px; margin: 0 auto; padding: 0 0 64px; }
+
+  header.hero {
+    background: var(--ink);
+    padding: 28px 20px 24px;
+    border-bottom: 6px solid var(--star-red);
+  }
+  .roundel {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--flag-blue);
+    border-radius: 10px;
+    padding: 10px 16px;
+    box-shadow: 0 2px 0 var(--flag-blue-dark);
+  }
+  .roundel .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: rgba(255,255,255,0.85);
+    text-transform: uppercase;
+  }
+  .roundel .digits {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 34px;
+    line-height: 1;
+    color: #fff;
+    letter-spacing: 0.02em;
+    min-width: 78px;
+  }
+  h1 {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 26px;
+    color: #fff;
+    margin: 18px 0 6px;
+    letter-spacing: 0.01em;
+  }
+  h1 span { color: var(--flag-blue); }
+  .tagline {
+    color: rgba(255,255,255,0.72);
+    font-size: 14.5px;
+    margin: 0;
+    max-width: 46ch;
+  }
+  .stars-row { display: flex; gap: 7px; margin-top: 16px; }
+  .stars-row svg { width: 14px; height: 14px; }
+
+  .search-panel {
+    background: var(--crust-card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin: -18px 20px 0;
+    padding: 18px;
+    position: relative;
+    box-shadow: 0 8px 20px rgba(23,35,61,0.08);
+  }
+  form { display: flex; flex-direction: column; gap: 12px; }
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--steel);
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  input[type="text"], select {
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    padding: 11px 12px;
+    font-size: 16px;
+    background: #fff;
+    color: var(--char);
+  }
+  input[type="text"]:focus, select:focus { border-color: var(--flag-blue); }
+  .submit-btn {
+    background: var(--star-red);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 13px 16px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: transform 0.05s ease;
+  }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn:disabled { background: var(--steel); cursor: not-allowed; }
+
+  .status-block {
+    margin: 28px 20px 0;
+    padding: 20px;
+    border: 1px dashed var(--line);
+    border-radius: 12px;
+    color: var(--steel);
+    font-size: 14.5px;
+    line-height: 1.5;
+  }
+  .status-block.error {
+    border-color: var(--star-red);
+    color: var(--star-red);
+    border-style: solid;
+    background: #fff2f2;
+  }
+
+  .results-meta {
+    margin: 26px 20px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--steel);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .results { display: flex; flex-direction: column; gap: 14px; padding: 0 20px; }
+  .card {
+    display: flex;
+    gap: 12px;
+    background: var(--crust-card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .card img {
+    width: 84px;
+    height: 84px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .card-body { min-width: 0; flex: 1; }
+  .card-name {
+    font-weight: 700;
+    font-size: 15.5px;
+    margin: 0 0 3px;
+    color: var(--ink);
+  }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--steel);
+    margin-bottom: 4px;
+  }
+  .rating-stars { color: var(--star-red); font-size: 13px; letter-spacing: 1px; }
+  .price-tag { font-family: 'IBM Plex Mono', monospace; color: var(--flag-blue-dark); font-weight: 600; }
+  .categories {
+    font-size: 12.5px;
+    color: var(--steel);
+    margin-bottom: 3px;
+  }
+  .address { font-size: 12.5px; color: var(--steel); }
+  .closed-badge {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--star-red);
+    margin-bottom: 4px;
+  }
+
+  footer {
+    margin: 32px 20px 0;
+    font-size: 12px;
+    color: var(--steel);
+    text-align: center;
+  }
+  footer a { color: var(--steel); text-decoration: underline; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo } = React;
+
+const AREA_CODE_MAP = {
+  201:"Jersey City, NJ",202:"Washington, DC",203:"Bridgeport, CT",205:"Birmingham, AL",
+  206:"Seattle, WA",207:"Portland, ME",208:"Boise, ID",209:"Stockton, CA",210:"San Antonio, TX",
+  212:"New York, NY",213:"Los Angeles, CA",214:"Dallas, TX",215:"Philadelphia, PA",216:"Cleveland, OH",
+  217:"Springfield, IL",218:"Duluth, MN",219:"Gary, IN",225:"Baton Rouge, LA",228:"Gulfport, MS",
+  229:"Albany, GA",231:"Traverse City, MI",239:"Fort Myers, FL",248:"Southfield, MI",251:"Mobile, AL",
+  252:"Greenville, NC",253:"Tacoma, WA",254:"Waco, TX",256:"Huntsville, AL",260:"Fort Wayne, IN",
+  262:"Kenosha, WI",267:"Philadelphia, PA",269:"Kalamazoo, MI",270:"Bowling Green, KY",276:"Bristol, VA",
+  281:"Houston, TX",301:"Rockville, MD",302:"Wilmington, DE",303:"Denver, CO",304:"Charleston, WV",
+  305:"Miami, FL",307:"Cheyenne, WY",308:"North Platte, NE",309:"Peoria, IL",310:"Beverly Hills, CA",
+  312:"Chicago, IL",313:"Detroit, MI",314:"St. Louis, MO",315:"Syracuse, NY",316:"Wichita, KS",
+  317:"Indianapolis, IN",318:"Shreveport, LA",319:"Cedar Rapids, IA",320:"St. Cloud, MN",321:"Orlando, FL",
+  323:"Los Angeles, CA",325:"Abilene, TX",330:"Akron, OH",334:"Montgomery, AL",336:"Greensboro, NC",
+  337:"Lafayette, LA",352:"Gainesville, FL",360:"Olympia, WA",361:"Corpus Christi, TX",386:"Daytona Beach, FL",
+  401:"Providence, RI",402:"Omaha, NE",404:"Atlanta, GA",405:"Oklahoma City, OK",406:"Billings, MT",
+  407:"Orlando, FL",408:"San Jose, CA",409:"Beaumont, TX",410:"Baltimore, MD",412:"Pittsburgh, PA",
+  413:"Springfield, MA",414:"Milwaukee, WI",415:"San Francisco, CA",417:"Springfield, MO",419:"Toledo, OH",
+  423:"Chattanooga, TN",425:"Bellevue, WA",430:"Tyler, TX",432:"Midland, TX",434:"Lynchburg, VA",
+  440:"Cleveland, OH",478:"Macon, GA",479:"Fort Smith, AR",480:"Scottsdale, AZ",501:"Little Rock, AR",
+  502:"Louisville, KY",503:"Portland, OR",504:"New Orleans, LA",505:"Albuquerque, NM",507:"Rochester, MN",
+  508:"Worcester, MA",509:"Spokane, WA",510:"Oakland, CA",512:"Austin, TX",513:"Cincinnati, OH",
+  515:"Des Moines, IA",516:"Hempstead, NY",517:"Lansing, MI",518:"Albany, NY",520:"Tucson, AZ",
+  530:"Redding, CA",540:"Roanoke, VA",541:"Eugene, OR",559:"Fresno, CA",561:"West Palm Beach, FL",
+  562:"Long Beach, CA",563:"Davenport, IA",567:"Toledo, OH",570:"Scranton, PA",573:"Columbia, MO",
+  574:"South Bend, IN",575:"Las Cruces, NM",580:"Lawton, OK",585:"Rochester, NY",586:"Warren, MI",
+  601:"Jackson, MS",602:"Phoenix, AZ",603:"Manchester, NH",605:"Sioux Falls, SD",606:"Ashland, KY",
+  607:"Binghamton, NY",608:"Madison, WI",609:"Trenton, NJ",610:"Allentown, PA",612:"Minneapolis, MN",
+  614:"Columbus, OH",615:"Nashville, TN",616:"Grand Rapids, MI",617:"Boston, MA",618:"Belleville, IL",
+  619:"San Diego, CA",620:"Hutchinson, KS",623:"Glendale, AZ",626:"Pasadena, CA",630:"Aurora, IL",
+  631:"Islip, NY",636:"St. Charles, MO",641:"Mason City, IA",650:"San Mateo, CA",651:"St. Paul, MN",
+  660:"Sedalia, MO",661:"Bakersfield, CA",662:"Tupelo, MS",678:"Atlanta, GA",701:"Fargo, ND",
+  702:"Las Vegas, NV",703:"Arlington, VA",704:"Charlotte, NC",706:"Columbus, GA",707:"Santa Rosa, CA",
+  708:"Cicero, IL",712:"Sioux City, IA",713:"Houston, TX",714:"Anaheim, CA",715:"Eau Claire, WI",
+  716:"Buffalo, NY",717:"Harrisburg, PA",718:"Brooklyn, NY",719:"Colorado Springs, CO",724:"Pittsburgh, PA",
+  727:"St. Petersburg, FL",731:"Jackson, TN",732:"New Brunswick, NJ",734:"Ann Arbor, MI",740:"Zanesville, OH",
+  757:"Norfolk, VA",760:"Palm Springs, CA",765:"Muncie, IN",770:"Marietta, GA",772:"Port St. Lucie, FL",
+  773:"Chicago, IL",774:"Worcester, MA",775:"Reno, NV",779:"Rockford, IL",781:"Waltham, MA",
+  785:"Topeka, KS",786:"Miami, FL",801:"Salt Lake City, UT",802:"Burlington, VT",803:"Columbia, SC",
+  804:"Richmond, VA",805:"Ventura, CA",806:"Amarillo, TX",808:"Honolulu, HI",810:"Flint, MI",
+  812:"Evansville, IN",813:"Tampa, FL",814:"Erie, PA",815:"Rockford, IL",816:"Kansas City, MO",
+  817:"Fort Worth, TX",818:"Van Nuys, CA",828:"Asheville, NC",830:"New Braunfels, TX",831:"Salinas, CA",
+  832:"Houston, TX",843:"Charleston, SC",845:"Poughkeepsie, NY",847:"Schaumburg, IL",850:"Tallahassee, FL",
+  856:"Camden, NJ",857:"Boston, MA",858:"San Diego, CA",859:"Lexington, KY",860:"Hartford, CT",
+  863:"Lakeland, FL",864:"Greenville, SC",865:"Knoxville, TN",870:"Jonesboro, AR",872:"Chicago, IL",
+  901:"Memphis, TN",903:"Tyler, TX",904:"Jacksonville, FL",907:"Anchorage, AK",908:"Elizabeth, NJ",
+  909:"San Bernardino, CA",910:"Fayetteville, NC",912:"Savannah, GA",913:"Kansas City, KS",
+  914:"White Plains, NY",915:"El Paso, TX",916:"Sacramento, CA",918:"Tulsa, OK",919:"Raleigh, NC",
+  920:"Green Bay, WI",925:"Concord, CA",928:"Flagstaff, AZ",931:"Clarksville, TN",936:"Conroe, TX",
+  937:"Dayton, OH",940:"Denton, TX",941:"Sarasota, FL",949:"Irvine, CA",951:"Riverside, CA",
+  954:"Fort Lauderdale, FL",956:"Laredo, TX",970:"Fort Collins, CO",971:"Portland, OR",972:"Dallas, TX",
+  973:"Newark, NJ",978:"Lowell, MA",979:"College Station, TX",985:"Houma, LA",989:"Saginaw, MI",
+};
+
+const STYLE_OPTIONS = [
+  { value: "all", label: "All Chicago Style" },
+  { value: "deep_dish", label: "Deep Dish Pizza" },
+  { value: "tavern", label: "Tavern-Style Pizza" },
+  { value: "italian_beef", label: "Italian Beef" },
+  { value: "chicago_dog", label: "Chicago Dog" },
+  { value: "gyro", label: "Chicago Gyro" },
+];
+
+function StarRow() {
+  return (
+    <div className="stars-row" aria-hidden="true">
+      {[0,1,2,3].map(i => (
+        <svg key={i} viewBox="0 0 24 24" fill="#c8102e">
+          <path d="M12 0l2.9 7.5 8 .3-6.3 5 2.3 7.8L12 16.2 5.1 20.6l2.3-7.8-6.3-5 8-.3z" />
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+function ratingStars(rating) {
+  const full = Math.round(rating);
+  return "★".repeat(full) + "☆".repeat(5 - full);
+}
+
+function ResultCard({ biz }) {
+  return (
+    <a className="card" href={biz.url} target="_blank" rel="noopener noreferrer">
+      <img
+        src={biz.image_url || ""}
+        alt=""
+        onError={(e) => { e.target.style.visibility = "hidden"; }}
+      />
+      <div className="card-body">
+        {biz.is_closed && <div className="closed-badge">Closed</div>}
+        <div className="card-name">{biz.name}</div>
+        <div className="card-meta">
+          <span className="rating-stars">{ratingStars(biz.rating)}</span>
+          <span>{biz.rating} ({biz.review_count})</span>
+          {biz.price && <span className="price-tag">{biz.price}</span>}
+        </div>
+        {biz.categories.length > 0 && (
+          <div className="categories">{biz.categories.join(" · ")}</div>
+        )}
+        <div className="address">{biz.address}</div>
+      </div>
+    </a>
+  );
+}
+
+function App() {
+  const [locationInput, setLocationInput] = useState("773");
+  const [style, setStyle] = useState("all");
+  const [status, setStatus] = useState("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [results, setResults] = useState([]);
+  const [searchedLabel, setSearchedLabel] = useState("");
+
+  const liveDigits = useMemo(() => {
+    const trimmed = locationInput.trim();
+    if (/^\d{3}$/.test(trimmed)) return trimmed;
+    return "773";
+  }, [locationInput]);
+
+  function resolveLocation(raw) {
+    const trimmed = raw.trim();
+    if (/^\d{3}$/.test(trimmed)) {
+      const mapped = AREA_CODE_MAP[parseInt(trimmed, 10)];
+      return mapped || null;
+    }
+    return trimmed;
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const resolved = resolveLocation(locationInput);
+
+    if (!resolved) {
+      setStatus("error");
+      setErrorMsg(`We don't have "${locationInput.trim()}" mapped to a metro yet. Try a ZIP code or "City, ST" instead.`);
+      return;
+    }
+
+    setStatus("loading");
+    setErrorMsg("");
+    try {
+      const params = new URLSearchParams({ location: resolved, style });
+      const res = await fetch(`/api/search?${params.toString()}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setStatus("error");
+        setErrorMsg(data.error || "Something went wrong reaching Yelp.");
+        return;
+      }
+
+      setResults(data.businesses);
+      setSearchedLabel(resolved);
+      setStatus("done");
+    } catch (err) {
+      setStatus("error");
+      setErrorMsg("Could not reach the search service. Check your connection and try again.");
+    }
+  }
+
+  return (
+    <div className="page">
+      <header className="hero">
+        <div className="roundel">
+          <span className="label">Area</span>
+          <span className="digits">{liveDigits}</span>
+        </div>
+        <h1>773 <span>CUISINE</span></h1>
+        <p className="tagline">Chicago-style eats, tracked down wherever the trains don't run.</p>
+        <StarRow />
+      </header>
+
+      <div className="search-panel">
+        <form onSubmit={handleSubmit}>
+          <div className="field">
+            <label htmlFor="loc">Area code, ZIP, or city</label>
+            <input
+              id="loc"
+              type="text"
+              value={locationInput}
+              onChange={(e) => setLocationInput(e.target.value)}
+              placeholder="773, 60601, or Chicago, IL"
+              autoComplete="off"
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="style">Style</label>
+            <select id="style" value={style} onChange={(e) => setStyle(e.target.value)}>
+              {STYLE_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+          <button className="submit-btn" type="submit" disabled={status === "loading"}>
+            {status === "loading" ? "Searching…" : "Find Chicago Style"}
+          </button>
+        </form>
+      </div>
+
+      {status === "idle" && (
+        <div className="status-block">
+          Enter an area code and we'll track down the deep dish, tavern-cut, and Chicago dogs nearest you.
+        </div>
+      )}
+
+      {status === "error" && (
+        <div className="status-block error">{errorMsg}</div>
+      )}
+
+      {status === "done" && (
+        <React.Fragment>
+          <div className="results-meta">
+            {results.length} spot{results.length === 1 ? "" : "s"} near {searchedLabel}
+          </div>
+          {results.length === 0 ? (
+            <div className="status-block">
+              Nothing matched near {searchedLabel}. Try a different style or a wider area.
+            </div>
+          ) : (
+            <div className="results">
+              {results.map(biz => <ResultCard key={biz.id} biz={biz} />)}
+            </div>
+          )}
+        </React.Fragment>
+      )}
+
+      <footer>
+        Search results powered by <a href="https://www.yelp.com" target="_blank" rel="noopener noreferrer">Yelp</a>.
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</body>
+</html>
